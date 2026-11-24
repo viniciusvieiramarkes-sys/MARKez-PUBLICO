@@ -1,6 +1,5 @@
-
 import streamlit as st
-import requests
+from google import genai
 
 st.set_page_config(
     page_title="MARKez IA",
@@ -11,17 +10,15 @@ st.set_page_config(
 st.title("🤖 MARKez IA")
 st.caption("Assistente inteligente • Acesso público")
 
-# Configuração da IA hospedada
+# Conexão com Google Gemini
 try:
-    API_URL = st.secrets["API_URL"]
-    API_KEY = st.secrets["API_KEY"]
-    MODEL = st.secrets["MODEL"]
+    API_KEY = st.secrets["GEMINI_API_KEY"]
+    client = genai.Client(api_key=API_KEY)
+    IA_CONFIGURADA = True
 except Exception:
-    API_URL = ""
-    API_KEY = ""
-    MODEL = ""
+    IA_CONFIGURADA = False
 
-# Histórico isolado na sessão de cada visitante
+# Histórico individual da conversa
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {
@@ -30,12 +27,12 @@ if "messages" not in st.session_state:
         }
     ]
 
-# Exibir conversa
+# Mostrar histórico
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-# Campo para mensagem
+# Campo de mensagem
 prompt = st.chat_input("Digite sua mensagem...")
 
 if prompt:
@@ -46,45 +43,40 @@ if prompt:
     with st.chat_message("user"):
         st.write(prompt)
 
-    if not API_URL or not API_KEY or not MODEL:
-        answer = (
-            "A plataforma está em fase de configuração. "
-            "A conexão com a inteligência artificial ainda será ativada."
-        )
-    else:
-        with st.chat_message("assistant"):
-            with st.spinner("Pensando..."):
-                try:
-                    response = requests.post(
-                        API_URL,
-                        headers={
-                            "Authorization": f"Bearer {API_KEY}",
-                            "Content-Type": "application/json"
-                        },
-                        json={
-                            "model": MODEL,
-                            "messages": st.session_state.messages,
-                            "temperature": 0.7
-                        },
-                        timeout=90
+    with st.chat_message("assistant"):
+        if not IA_CONFIGURADA:
+            answer = "A conexão com o Google Gemini não foi configurada."
+            st.warning(answer)
+        else:
+            try:
+                with st.spinner("MARKez está pensando..."):
+                    historico = []
+
+                    for msg in st.session_state.messages:
+                        if msg["role"] == "user":
+                            historico.append({
+                                "role": "user",
+                                "parts": [{"text": msg["content"]}]
+                            })
+                        elif msg["role"] == "assistant":
+                            historico.append({
+                                "role": "model",
+                                "parts": [{"text": msg["content"]}]
+                            })
+
+                    response = client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=historico
                     )
 
-                    response.raise_for_status()
-                    data = response.json()
-                    answer = data["choices"][0]["message"]["content"]
+                    answer = response.text
                     st.markdown(answer)
 
-                except Exception:
-                    answer = (
-                        "Não consegui me conectar à IA neste momento. "
-                        "Tente novamente mais tarde."
-                    )
-                    st.error(answer)
-
-    if not API_URL or not API_KEY or not MODEL:
-        with st.chat_message("assistant"):
-            st.info(answer)
+            except Exception as e:
+                answer = "Não consegui conectar ao Google Gemini. Verifique a chave e tente novamente."
+                st.error(answer)
 
     st.session_state.messages.append(
         {"role": "assistant", "content": answer}
     )
+
