@@ -1,0 +1,9 @@
+MARKEZ IA — versão pública com Gemini
+
+1. No GitHub, substitua o app.py pelo app.py deste pacote.
+2. Atualize o requirements.txt com o arquivo deste pacote.
+3. No Streamlit Cloud > Settings > Secrets, mantenha GEMINI_API_KEY configurada.
+4. O modelo padrão é gemini-2.5-flash.
+
+A interface, navegação, pesquisa web, voz do navegador, SQLite, estoque e integração opcional com Home Assistant foram preservados do arquivo original.
+Atenção: o SQLite no Streamlit Cloud não garante persistência permanente após reinícios ou recriações do ambiente. Para isso, será necessário conectar um banco externo.
