@@ -296,22 +296,27 @@ def web_search(query):
         return []
 
 
+
 def get_gemini_client():
     """Obtém a chave sem expô-la na interface ou no código."""
     try:
         api_key = st.secrets.get("GEMINI_API_KEY", "")
     except Exception:
         api_key = ""
+
     api_key = api_key or os.getenv("GEMINI_API_KEY", "")
+
     if not api_key:
         raise RuntimeError(
             "A chave GEMINI_API_KEY não foi configurada. "
             "Adicione-a em Settings > Secrets no Streamlit Cloud."
         )
-   return genai.Client(
-    api_key=api_key,
-    http_options=genai.types.HttpOptions(api_version="v1beta")
-)
+
+    return genai.Client(
+        api_key=api_key,
+        http_options=genai.types.HttpOptions(api_version="v1beta"),
+    )
+
 
 
 def ask_model(question, history, results, model, stream_output=False):
