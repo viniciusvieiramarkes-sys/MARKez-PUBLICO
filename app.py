@@ -308,7 +308,10 @@ def get_gemini_client():
             "A chave GEMINI_API_KEY não foi configurada. "
             "Adicione-a em Settings > Secrets no Streamlit Cloud."
         )
-    return genai.Client(api_key=api_key)
+   return genai.Client(
+    api_key=api_key,
+    http_options=genai.types.HttpOptions(api_version="v1beta")
+)
 
 
 def ask_model(question, history, results, model, stream_output=False):
